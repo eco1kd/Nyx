@@ -1,0 +1,23 @@
+{
+  "sources": {
+    "jni/main.cpp": "jni/src/core/entry.cpp",
+    "jni/game_offsets.hpp": "jni/src/game/offsets.hpp",
+    "jni/esp_runtime.hpp": "jni/src/features/visuals/esp_runtime.hpp",
+    "jni/aim_core.hpp": "jni/src/features/aim/core.hpp",
+    "jni/aim_offsets.hpp": "jni/src/features/aim/offsets.hpp",
+    "jni/aim_runtime.hpp": "jni/src/features/aim/runtime.hpp",
+    "jni/aim_debug.hpp": "jni/src/features/aim/debug.hpp",
+    "jni/aim_ui.hpp": "jni/src/ui/pages/aim.hpp",
+    "jni/ui_premium.hpp": "jni/src/ui/premium.hpp",
+    "jni/lucide_vectors.hpp": "jni/src/ui/icons/lucide_vectors.hpp",
+    "jni/fonts/mozilla_text.hpp": "jni/src/ui/fonts/mozilla_text.hpp",
+    "diagnostics/aim_test.cpp": "tests/aim/aim_test.cpp",
+    "diagnostics/aim-debug/aim_debug_smoke.cpp": "tests/aim/debug_smoke.cpp",
+    "diagnostics/premium-ui-20260930/tests/ui_test.cpp": "tests/ui/ui_test.cpp",
+    "diagnostics/premium-ui-20260930/tests/android/log.h": "tests/stubs/android/log.h"
+  },
+  "backup": "/home/leftcode/Projects/LemmingRMT/backups/20261001-014809-before-project-organization",
+  "initial_move_source_bodies_unchanged_except_include_paths": true,
+  "final_verification": "diagnostics/organization/preservation.json",
+  "host_test_only_changes": "UI screenshots now go to a per-run directory, with file-open validation."
+}

@@ -1,0 +1,10 @@
+https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/crosshair.svg
+https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/eye.svg
+https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/sliders-horizontal.svg
+https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/user-round.svg
+https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/layers.svg
+https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/palette.svg
+https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/bone.svg
+https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/settings-2.svg
+https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/diamond.svg
+https://raw.githubusercontent.com/lucide-icons/lucide/main/LICENSE

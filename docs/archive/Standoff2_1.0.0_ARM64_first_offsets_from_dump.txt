@@ -1,0 +1,222 @@
+STANDOFF 2 1.0.0 — ARM64 FIRST-PRIORITY OFFSET PROFILE
+Source: /home/leftcode/Downloads/dump (1).cs
+Source SHA-256: ecb17199f3219949dd0884ab0977dd96894ba81daa719bfd3d3de9a3dde7296a
+Dumper header: custom Unity6 IL2CPP dumper
+Header totals: 32644 types, 194219 methods, 119744 fields, 338 images
+Target library: libunity.so
+Address rule for method RVAs: runtime_address = libunity_base + RVA
+Generated: 2026-09-28
+
+IMPORTANT QUALITY NOTE
+The dump contains concrete RVAs for only about 7554 of 194219 methods. Most ordinary
+IL2CPP methods are marked "RVA: -1 (no body)". Field offsets remain useful, but a
+method shown as -1 must NOT be treated as a callable address. Some image headers in
+the custom dump are malformed, so this profile identifies entries by namespace,
+type and field/method name instead of trusting the image header.
+
+=====================================================================
+PLAYER CONTROLLER — Axlebolt.Standoff.Player.PlayerController
+TypeDefIndex: 776
+=====================================================================
+Static-field table offsets (not PlayerController instance offsets):
+MaxCtHealth                 = 0x08
+MaxCtArmor                  = 0x0C
+MaxTrHealth                 = 0x10
+MaxTrArmor                  = 0x14
+
+Instance fields:
+MainCameraHolder            = 0x28  // UnityEngine.Transform
+FpsCameraHolder             = 0x30  // UnityEngine.GameObject
+FpsDirective                = 0x38  // UnityEngine.GameObject
+AimController               = 0x80
+WeaponryController          = 0x88
+MecanimController           = 0x90
+MovementController          = 0x98
+ArmsAnimationController     = 0xA0
+PlayerHitController         = 0xA8
+PlayerMaterialController    = 0xB0
+NetworkController           = 0xC0
+PlayerMainCamera            = 0xE8
+PlayerFpsCamera             = 0xF0
+CharacterController         = 0x118
+PhotonView                  = 0x150
+PhotonPlayer                = 0x160
+
+Named methods such as SetArmorViaServer and DieViaServer are present in this dump,
+but their RVA is -1. They are deliberately not exported as callable offsets.
+
+=====================================================================
+WEAPONRY CONTROLLER — Axlebolt.Standoff.Player.Weaponry.WeaponryController
+TypeDefIndex: 817
+=====================================================================
+PlayerController            = 0x78
+MecanimController           = 0x80
+WeaponPickupController      = 0x90
+KitController               = 0x98
+CurrentWeaponController     = 0xA0
+WeaponManager               = 0xB8
+
+Concrete method RVAs from the x64 dump:
+OnPreInitialize             = 0x9147D18
+PrepareArmsBipedMap         = 0x91584AC
+Constructor                 = 0x914F354
+
+The remaining concrete methods are obfuscated. They are retained in the original
+dump but not assigned guessed meanings in this first-priority profile.
+
+=====================================================================
+BOMB WEAPONRY CONTROLLER
+Axlebolt.Standoff.Player.Weaponry.BombWeaponryController
+TypeDefIndex: 812
+=====================================================================
+WeaponryController          = 0x58
+PlayerHitController         = 0x60
+OnPreInitialize RVA         = 0x9149214
+Obfuscated RVA 1            = 0x9147DF0
+Obfuscated RVA 2            = 0x915618C
+Constructor RVA             = 0x9155EB8
+
+=====================================================================
+GUN CONTROLLER — Axlebolt.Standoff.Inventory.Gun.GunController
+TypeDefIndex: 1896
+=====================================================================
+GunParameters               = 0x168
+Transform1                  = 0x1C0
+Transform2                  = 0x1C8
+Transform3                  = 0x1D0
+AccuracyData                = 0x228
+
+GunController methods are marked RVA -1 in this dump. Use the fields only until a
+runtime instance resolver and independent method mapping are completed.
+
+=====================================================================
+GUN PARAMETERS — Axlebolt.Standoff.Inventory.Gun.GunParameters
+TypeDefIndex: 1898
+=====================================================================
+SightType                   = 0x110
+DrawRecoilLines             = 0x114
+ReloadType                  = 0x117
+AmmunitionType              = 0x118
+ScopeAimSensitivityMult     = 0x12C
+AmmunitionObject            = 0x130
+DoubledAmmoConsumption      = 0x138
+DamageObject                = 0x140
+HitRange                    = 0x148
+FireRate                    = 0x14C
+RecoilControl               = 0x150
+RecoilParameters            = 0x158
+AccuracyAdditiveCurve       = 0x160
+AccuracyMultOnJump          = 0x168
+NoAimDispersionCurve        = 0x170
+RecoilMultOnCrouch          = 0x178
+AccuracyMultOnCrouch        = 0x17C
+RecoilAimMult               = 0x180
+AccuracyAimMult             = 0x184
+RecoilAimMultOnCrouch       = 0x188
+AccuracyAimMultOnCrouch     = 0x18C
+AccurateRange               = 0x190
+ArmorPenetration            = 0x1A0
+PenetrationPower            = 0x1A4
+ReloadDuration              = 0x1A8
+TacticalReloadDuration      = 0x1AC
+RoundInsertDuration         = 0x1B0
+ReloadStartOffset           = 0x1B4
+RoundInsertOffset           = 0x1B8
+VisibleCartridgeCount       = 0x1BC
+MagazineInsertTime          = 0x1C0
+TakeDuration                = 0x1C4
+PreReloadTime               = 0x1C8
+Impulse                     = 0x1CC
+
+Safe/validated mirrors used by the game:
+FireRateSafe                = 0x1D4
+AccuracyMultOnJumpSafe      = 0x1EC
+RecoilMultOnCrouchSafe      = 0x1F8
+AccuracyMultOnCrouchSafe    = 0x204
+RecoilAimMultSafe           = 0x210
+AccuracyAimMultSafe         = 0x21C
+RecoilAimMultOnCrouchSafe   = 0x228
+AccuracyAimMultOnCrouchSafe = 0x234
+RecoilControlSafe           = 0x240
+ArmorPenetrationSafe        = 0x258
+PenetrationPowerSafe        = 0x264
+ReloadDurationSafe          = 0x270
+TacticalReloadDurationSafe  = 0x27C
+HitRangeSafe                = 0x2DC
+
+WARNING: changing only a plain field while ignoring its Safe* mirror may have no
+effect or may trigger consistency checks. No automatic memory writes are enabled.
+
+=====================================================================
+AMMUNITION — Axlebolt.Standoff.Inventory.Ammunition
+TypeDefIndex: 1773
+=====================================================================
+MagazineCapacity            = 0x10  // short
+Capacity                    = 0x12  // short
+Getters exist in metadata but have RVA -1.
+
+=====================================================================
+RECOIL PARAMETERS — Axlebolt.Standoff.Inventory.Gun.RecoilParameters
+TypeDefIndex: 1910
+=====================================================================
+HorizontalRange             = 0x10
+VerticalRange               = 0x14
+XAxisDeviationCurve         = 0x18
+YAxisDeviationCurve         = 0x20
+RecoilAccelerationCurve     = 0x28
+FallbackDurationCurve       = 0x30
+MaxFallbackDuration         = 0x38
+RelativeDispersionCurve     = 0x40
+CameraDeviationCoeff        = 0x48
+MaxApproachSpeed            = 0x4C
+RecoilAccelDuration         = 0x50
+RecoilAccelStep             = 0x54
+ProgressFallbackCurve       = 0x58
+ProgressFillingShotsCount   = 0x60
+
+=====================================================================
+GAME MODE TEAM SETTINGS — Axlebolt.Standoff.Game.Settings.GameModeTeamSettings
+TypeDefIndex: 2849
+These are match/rules settings, NOT live per-player HP.
+=====================================================================
+MaxTeamSize                 = 0x10
+SpeedMultiplier             = 0x14
+HighJump                    = 0x18
+InfinityWeaponBuyTime       = 0x19
+CanWeaponBuyEverywhere      = 0x1A
+InfinityAmmoAbsolutely      = 0x1B
+InfinityMagazines           = 0x1C
+InfinityGrenades            = 0x1D
+FriendlyFire                = 0x20
+HeadshotOnly                = 0x21
+StartMoney                  = 0x28
+MaxMoney                    = 0x2C
+ConfiguredHealth            = 0x30
+ConfiguredArmor             = 0x34
+WeaponSettings              = 0x38
+
+The get_Health/set_Health methods in this class have RVA -1 and configure game-mode
+starting values. They are not a verified live-player GetHealth function.
+
+=====================================================================
+PHOTON PLAYER — PhotonPlayer
+TypeDefIndex: 20130
+=====================================================================
+ActorId                     = 0x18
+Name                        = 0x20
+UserId                      = 0x28
+IsLocal                     = 0x30
+IsInactive                  = 0x31
+CustomProperties            = 0x38
+TagObject                   = 0x40
+
+=====================================================================
+CURRENT STATUS FOR LEMMINGRMT
+=====================================================================
+- The profile above is embedded in jni/game_offsets.hpp.
+- LemmingRMT resolves the runtime libunity.so base and validates known dump RVAs.
+- Direct memory writes are intentionally disabled until PlayerController and the
+  active GunController instance are resolved safely.
+- A guessed GetHealth hook is not included.
+- Offsets are specific to the supplied version and can change after any update.
+- Modification of the game can violate its rules and cause account/device bans.

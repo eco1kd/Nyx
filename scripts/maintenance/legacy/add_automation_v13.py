@@ -1,0 +1,48 @@
+from pathlib import Path
+import os,sys,stat
+root=Path(__file__).resolve().parents[3]
+updates={}
+def edit(name,old,new):
+ p=root/name;s=updates.get(p,p.read_text());assert s.count(old)==1,(name,old[:90],s.count(old));updates[p]=s.replace(old,new,1)
+def replace(name,old,new):
+ p=root/name;s=updates.get(p,p.read_text());assert old in s,(name,old);updates[p]=s.replace(old,new)
+edit('jni/src/features/aim/core.hpp','#include <atomic>','#include <atomic>\n#include "features/aim/automation.hpp"')
+edit('jni/src/features/aim/core.hpp','Settings normal{},silent{};bool pauseInMenu=true;Configuration(){silent.onAttack=false;}','Settings normal{},silent{};automation::Options autoFire{};bool pauseInMenu=true;Configuration(){normal.onAttack=false;silent.onAttack=false;}')
+edit('jni/src/features/aim/core.hpp','s.fov=finiteClamp(s.fov,8,.1f,120)','s.fov=finiteClamp(s.fov,8,.1f,180)')
+edit('jni/src/features/aim/core.hpp','c.silent=sanitize(c.silent);{','c.silent=sanitize(c.silent);c.autoFire=automation::sanitize(c.autoFire);{')
+edit('jni/src/features/aim/core.hpp','c.normal.enabled||c.silent.enabled,std::memory_order_release','c.normal.enabled||c.silent.enabled||c.autoFire.enabled,std::memory_order_release')
+edit('jni/src/features/aim/core.hpp','inline std::atomic<int> g_normalState','inline std::atomic<bool> g_inputHookReady{false};\ninline std::atomic<int> g_autoStage{0};\ninline std::atomic<int> g_normalState')
+replace('jni/src/features/aim/assists.hpp','degrees>120','degrees>180')
+edit('jni/src/features/aim/offsets.hpp','inline constexpr std::uint8_t kAttackState','inline constexpr std::uintptr_t kInputTick=0xAAF79D0,kCommandAttack=0x944E2A8,kCommandScope=0x945BB7C,kCommandScopeHold=0x945B774,kCommandLook=0x94479F8;\ninline constexpr std::uint8_t kAttackState')
+edit('jni/src/features/aim/runtime.hpp','inline void cameraTick(void* self','// This header shares the runtime namespace and uses the verified helpers above.\n#include "features/aim/automation_runtime.hpp"\ninline void cameraTick(void* self')
+edit('jni/src/features/aim/runtime.hpp','auto c=configuration();auto s=c.normal;if(!gate','auto c=configuration();auto s=c.normal;if(c.autoFire.enabled&&c.autoFire.returnCamera){g_recoilTracker.reset();return;}if(!gate')
+edit('jni/src/features/aim/runtime.hpp','// Forward ORIGINAL exactly once. No camera/transform writes in this path.','// Forward once; Silent direction edits are unchanged. Automation observes the completed local emission.')
+edit('jni/src/features/aim/runtime.hpp','if(g_emitOriginal)g_emitOriginal(self,ctx,rays,span);','if(g_emitOriginal)g_emitOriginal(self,ctx,rays,span);\n autoShotObserved(self,ctx,rays,count);')
+edit('jni/src/features/aim/runtime.hpp','if(c.normal.enabled&&!installCamera())','if((c.normal.enabled||c.autoFire.enabled)&&!installCamera())')
+edit('jni/src/features/aim/runtime.hpp','if(c.silent.enabled&&!installSilent())g_silentState.store(1);','if((c.silent.enabled||c.autoFire.enabled)&&!installSilent())g_silentState.store(1);if(c.autoFire.enabled&&p==localPlayer())installInput(p);')
+edit('jni/src/features/aim/runtime.hpp','prepareAssists(c.normal.rcs,c.normal.visibleCheck);capture(p,c.normal.visibleCheck&&g_visibilityReady.load());','prepareAssists(c.normal.rcs,c.normal.visibleCheck||c.autoFire.enabled);capture(p,(c.normal.visibleCheck||c.autoFire.enabled)&&g_visibilityReady.load());')
+edit('jni/src/features/aim/debug.hpp','inline std::atomic<float> recoilPitch','inline Count inputCalls{0},autoRayChecks{0},autoRequests{0},autoShots{0},autoRestores{0},autoScopePulses{0},autoTimeouts{0};\ninline std::atomic<int> autoReason{0};\ninline std::atomic<float> recoilPitch')
+replace('jni/src/features/aim/debug.hpp','v12-angle-assists','v13-aim-automation')
+edit('jni/src/features/aim/debug.hpp','recoilPitch.load(),recoilYaw.load());}','recoilPitch.load(),recoilYaw.load());\n log("automation enabled=%d back=%d scope=%d hook=%d stage=%s reason=%d input=%llu rays=%llu requests=%llu observedShots=%llu restores=%llu scopePulses=%llu timeouts=%llu (shots != damage)",c.autoFire.enabled,c.autoFire.returnCamera,c.autoFire.autoScope,g_inputHookReady.load(),automation::stageText(static_cast<automation::Stage>(g_autoStage.load())),autoReason.load(),(unsigned long long)inputCalls.load(),(unsigned long long)autoRayChecks.load(),(unsigned long long)autoRequests.load(),(unsigned long long)autoShots.load(),(unsigned long long)autoRestores.load(),(unsigned long long)autoScopePulses.load(),(unsigned long long)autoTimeouts.load());}')
+edit('jni/src/ui/premium.hpp','{"Angles","Silent","Targeting","Multipoints",nullptr}','{"Angles","Silent","Targeting","Multipoints","Automation"}')
+edit('jni/src/ui/pages/aim.hpp','void renderAimControls(float x','void uiAimCoverage(const char* id,lemming::aim::Settings& cfg){float coverage=cfg.fov*2;uiSlider(id,"FOV coverage (360 = all directions)",coverage,1,360,"%.1f deg");cfg.fov=coverage*.5f;}\nvoid renderAimControls(float x')
+edit('jni/src/ui/pages/aim.hpp','const char* headings[4][2]','const char* headings[5][2]')
+edit('jni/src/ui/pages/aim.hpp','{"ANGLE MULTIPOINTS","SILENT MULTIPOINTS"}','{"ANGLE MULTIPOINTS","SILENT MULTIPOINTS"},{"TRIGGERBOT","CAMERA & AUTO SCOPE"}')
+edit('jni/src/ui/pages/aim.hpp','uiSlider("aim_fov","Angular FOV",cfg.fov,.5f,120,"%.1f deg");','uiAimCoverage("aim_fov",cfg);')
+edit('jni/src/ui/pages/aim.hpp','uiSlider("target_fov","Angular FOV",cfg.fov,.5f,120,"%.1f deg");','uiAimCoverage("target_fov",cfg);')
+edit('jni/src/ui/pages/aim.hpp','}else{uiToggle("Angle multipoints"','}else if(g_subsection==4){auto& cfg=g_aimUi.autoFire;uiToggle("Enable Triggerbot",cfg.enabled);uiSlider("trigger_delay","Trigger delay",cfg.delayMs,0,300,"%.0f ms");uiSlider("trigger_interval","Minimum shot interval",cfg.intervalMs,30,1000,"%.0f ms");uiSlider("trigger_timeout","Cycle timeout",cfg.timeoutMs,200,2000,"%.0f ms");}else{uiToggle("Angle multipoints"')
+edit('jni/src/ui/pages/aim.hpp','}else if(g_subsection==3){uiToggle("Silent multipoints"','}else if(g_subsection==4){uiToggle("Back camera",g_aimUi.autoFire.returnCamera);uiToggle("Auto scope",g_aimUi.autoFire.autoScope);uiTextLeft(d,ImGui::GetCursorScreenPos(),"Back camera requires Angles enabled.",uiColor(ImVec4(.48f,.54f,.66f,1)),12*s,g_uiSmallFont);ImGui::Dummy(ImVec2(0,28*s));uiTextLeft(d,ImGui::GetCursorScreenPos(),"Real collider hit required before firing.",uiColor(ImVec4(.48f,.54f,.66f,1)),12*s,g_uiSmallFont);ImGui::Dummy(ImVec2(0,28*s));uiTextLeft(d,ImGui::GetCursorScreenPos(),"Scope keeps normal weapon timings.",uiColor(ImVec4(.48f,.54f,.66f,1)),12*s,g_uiSmallFont);}else if(g_subsection==3){uiToggle("Silent multipoints"')
+edit('jni/src/ui/pages/aim.hpp','uiText(d,ImVec2(x+410*s,y+602*s),g_subsection==3?','if(g_subsection==4)status=!g_aimUi.autoFire.enabled?"Automation disabled":(lemming::aim::g_menuOpen.load()?"Automation paused while menu is open":(!g_inputHookReady.load()||!g_silentHookReady.load()||!g_visibilityReady.load()?"Waiting for input / shot / raycast profiles":automation::stageText(static_cast<automation::Stage>(g_autoStage.load()))));uiText(d,ImVec2(x+410*s,y+602*s),g_subsection==3?')
+replace('jni/src/game/offsets.hpp','v12-angle-assists','v13-aim-automation')
+edit('tests/aim/debug_smoke.cpp','static int normalOriginalCalls=0,silentOriginalCalls=0;','static int normalOriginalCalls=0,silentOriginalCalls=0,inputOriginalCalls=0;\nstatic void inputOriginal(void*,lemming::aim::runtime::ExecuteTime,const void*){++inputOriginalCalls;}')
+edit('tests/aim/debug_smoke.cpp','assert(lines.size()==7);','assert(lines.size()==8);rt::g_inputOriginal.store(inputOriginal);rt::inputTick(nullptr,{1,.016f},nullptr);assert(inputOriginalCalls==1);')
+replace('tests/aim/debug_smoke.cpp','v12-angle-assists','v13-aim-automation')
+replace('tests/ui/ui_test.cpp','page<4','page<5')
+edit('tests/ui/ui_test.cpp','"aim-multipoints.ppm"};','"aim-multipoints.ppm","aim-automation.ppm"};')
+edit('tests/ui/ui_test.cpp',' for(const ImVec2 size:{ImVec2(2340,1080),ImVec2(1920,1080)', ' g_subsection=4;settle();aim=containing("##aim_left");parts=containing("##aim_right");click(aim->Pos.x+150,aim->Pos.y+22);assert(g_aimUi.autoFire.enabled&&lemming::aim::configuration().autoFire.enabled);click(parts->Pos.x+150,parts->Pos.y+22);assert(g_aimUi.autoFire.returnCamera);click(parts->Pos.x+150,parts->Pos.y+76);assert(g_aimUi.autoFire.autoScope);\n for(const ImVec2 size:{ImVec2(2340,1080),ImVec2(1920,1080)')
+edit('scripts/test.sh',' run_case assists tests/aim/assists_test.cpp -ldl -lpthread',' run_case assists tests/aim/assists_test.cpp -ldl -lpthread\n run_case automation tests/aim/automation_test.cpp -ldl -lpthread')
+print('Preflight PASS',len(updates),'existing files')
+if '--check' in sys.argv:raise SystemExit
+for p,s in updates.items():
+ mode=stat.S_IMODE(p.stat().st_mode);tmp=p.with_name(p.name+'.v13-new');tmp.write_text(s);os.chmod(tmp,mode);os.replace(tmp,p)
+print('Applied v13 source updates; preserved file modes')
