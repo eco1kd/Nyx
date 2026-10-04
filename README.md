@@ -1,51 +1,149 @@
-# LemmingRMT
+# Nyx — Android Native Overlay Framework
 
-ARM64 / GLES3 project for Standoff 2 1.0.0, organized by responsibility.
+A research-oriented native overlay framework for Android, written in C++17
+with OpenGL ES 3 rendering via EGL. Designed for studying Android native
+development, dynamic instrumentation, and IL2CPP runtime introspection.
 
-## Current state
+> **Educational / research project.** Not intended for distribution,
+> production use, or any application that violates third-party terms of
+> service. The author assumes no responsibility for misuse.
 
-The current profile is v16-command-phase-hitbox. Automation now uses the verified native early/late weapon-command pair, before the original Attack gate and after late WeaponAction consumption. It no longer depends on finding uys. Module-owned buttons and the nullable Look command are cleaned up with local/world/token guards; Back camera is independent of the Angles toggle, and unavailable Auto scope does not block Triggerbot/Back camera. Silent refreshes the live selected hitbox, uses center-first Head and bounds any lead inside its current volume, with exact selected-collider validation and center fallback. See docs/game/COMMAND_PHASE_AND_SILENT_FIX_v16.md. Final ARM64 build and full host/UI/GLES regressions passed; neither proves on-device behavior or server damage. ADB has no connected device; no deployment, restart, reload or injection occurred. Both aim modes and automatic shooting still default OFF. Existing FOV/RCS/visibility/360/body controls and the no-scroll six-page menu remain. Rage/Config remain scaffolding; Skeleton, penetration, forged damage and anti-cheat bypass remain absent.
+---
 
-## Quick commands
+## Overview
 
-```bash
-./build.sh                    # ARM64 library -> out/arm64-v8a/
-./test.sh                     # current host tests + structure check
-./test.sh unit                # math/runtime guards + diagnostic formatting
-./test.sh ui                  # menu/layout and offscreen GLES3 when available
-python3 scripts/check_structure.py
-./aim_debug.sh capture 45      # bounded, tag-only ADB capture
-./adb_logs.sh dump             # buffered module logs
+Nyx is a modular native library (`.so`) that attaches to a running Android
+application and renders a Dear ImGui overlay inside the application's own
+OpenGL ES context. The framework demonstrates:
+
+- **EGL frame interception** via GOT/PLT relocation patching
+- **JNI input bridge** via `RegisterNatives` on Java-side native methods
+- **Vtable hooking** of managed methods in Unity/IL2CPP runtimes
+- **Safe cross-process memory reads** (`process_vm_readv` with fallback)
+- **Dear ImGui rendering** inside a foreign GLES3 context
+- **Touch input mapping** between physical screen and framebuffer space
+- **IME integration** through a hidden `EditText` + `InputMethodManager`
+
+The runtime is **ARM64-only** and targeted at applications built with
+Unity/IL2CPP.
+
+---
+
+## Architecture
+
+```
+jni/
+├── src/
+│   ├── core/entry.cpp          Bootstrap, EGL hooks, JNI bridge, IME
+│   ├── game/offsets.hpp        Version-specific IL2CPP symbol map
+│   ├── features/
+│   │   ├── visuals/esp_runtime.hpp   World-to-screen projection module
+│   │   └── aim/                      Target selection & math utilities
+│   └── ui/premium.hpp          ImGui overlay UI
+├── Android.mk
+└── Application.mk
+scripts/
+├── build.sh                    NDK build wrapper
+└── debug/                      ADB log capture helpers
+docs/                           Design notes and offset references
 ```
 
-Set ANDROID_NDK_HOME for a different NDK, CXX for a different host compiler, ADB / ANDROID_SERIAL for a different ADB/device. `./build.sh clean` preserves out/ and backups and cleans only NDK intermediate files. No clean was run during organization.
+---
 
-## Where things live
+## Building
 
-- jni/src/core/: existing bootstrap/render/input integration.
-- jni/src/game/: versioned game profile.
-- jni/src/features/aim/: settings/math, runtime, Aim offsets, debug counters.
-- jni/src/features/visuals/: existing ESP runtime.
-- jni/src/features/rage/, misc/, config/, settings/: reserved future sections.
-- jni/src/ui/: menu/editor, Aim page and embedded resources; future page folders are reserved.
-- jni/third_party/imgui/: vendor code and license.
-- assets/: original icons/fonts and licenses.
-- scripts/: build, debug, validation and test tooling.
-- tests/: reusable current host test sources and Android stub.
-- docs/: architecture, debug guides, game evidence and historical notes.
-- reference/dumps/1.0.0/: original dump, unchanged.
-- build/: generated NDK files and host binaries; previous caches retained under legacy-ndk/.
-- out/arm64-v8a/liblemmingrmt.so: final library, unchanged output path.
-- diagnostics/aim-debug/: current Aim captures, unchanged path.
-- diagnostics/tests/: fresh test logs/screenshots.
-- diagnostics/archive/: preserved older sessions/reports/screenshots.
-- backups/: source/release snapshots; no previous backup was deleted.
+### Requirements
 
-Detailed map and extension conventions: [PROJECT_STRUCTURE.md](docs/architecture/PROJECT_STRUCTURE.md).
-Debug guide: [AIM_DEBUG.md](docs/debug/AIM_DEBUG.md).
-Offset evidence: [AIM_OFFSETS_1.0.0_ARM64.md](docs/game/AIM_OFFSETS_1.0.0_ARM64.md).
-Renames: [file-moves.json](docs/architecture/file-moves.json).
+- Android NDK r30 (or newer)
+- CMake / GNU make
+- Target: `arm64-v8a`, minimum API 23
 
-The original README is preserved in docs/archive/README_before_organization.md. Previous root scripts are forwarding wrappers; old dump and document names remain compatibility symlinks. Code was moved, not redesigned internally: entry.cpp, ESP and the shared premium menu still contain the existing implementations.
+### Build
 
-Use modifies game behavior, violates the game's ToS and may result in a ban.
+```bash
+export ANDROID_NDK_HOME=/path/to/android-ndk-r30
+./build.sh
+```
+
+Output: `out/arm64-v8a/liblemmingrmt.so`
+
+---
+
+## Runtime Components
+
+### 1. Frame Interception
+
+The library patches EGL entry points in the target process's GOT via
+`dl_iterate_phdr`, allowing the overlay to draw immediately before
+`eglSwapBuffers`. Frames are rendered into the same EGL context used by
+the host application.
+
+### 2. Input Bridge
+
+Touch events are captured through a JNI hook on
+`UnityPlayer.nativeInjectEvent`. Coordinates are rescaled from physical
+screen space to the current framebuffer size (which may differ due to
+adaptive resolution). Events consumed by the overlay are not forwarded
+to the host.
+
+### 3. IL2CPP Introspection
+
+Managed classes and methods are resolved at runtime through the IL2CPP
+API (`il2cpp_domain_get`, `il2cpp_class_from_name`, …). Metadata is
+read only — the framework does not modify managed state.
+
+### 4. UI Layer
+
+A fully custom Dear ImGui interface with:
+
+- Section-based navigation (General / Aim / Visuals / Misc / Config / Settings)
+- Animated transitions, sliding indicators, backdrop dimming
+- Watermark overlay with FPS telemetry
+- Optional login screen with guest access
+- Window scaling, locking, and repositioning
+
+---
+
+## Versioning
+
+Symbol addresses and field offsets are version-specific. The current
+profile targets a single known build (`kLibUnityBuildId` in
+`jni/src/game/offsets.hpp`). For a different build, regenerate offsets
+with a compatible IL2CPP dumper and update `offsets.hpp`.
+
+---
+
+## Limitations
+
+- x86 and 32-bit ARM are not supported
+- Managed GC may invalidate cached object references — all reads use
+  guarded, bounds-checked helpers with automatic invalidation
+- Adaptive resolution requires per-frame rescaling of projection input
+- SELinux and system integrity checks may prevent loading on hardened
+  devices
+
+---
+
+## Roadmap
+
+- [ ] Config persistence (save / load presets)
+- [ ] Restructure `entry.cpp` into smaller translation units
+- [ ] Offline math/UI test suite
+- [ ] Bone hierarchy traversal utilities
+
+---
+
+## License
+
+MIT — see LICENSE for details.
+
+---
+
+## Disclaimer
+
+This project is provided for educational and research purposes only.
+It exists to demonstrate native Android development techniques such as
+EGL interception, JNI bridging, and safe cross-process memory access.
+Use of this software to modify or interact with third-party applications
+may violate their terms of service; the author does not endorse or
+support such use.
